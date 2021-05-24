@@ -5,9 +5,8 @@
 .vscode/ipch
 spin/pan*
 spin/_spin_nvr.tmp
-spin/luces.pml.trail
-spin/alarma.pml.trail
-spin/codigo.pml.trail
+spin/*.nvr
+spin/*.pml.trail
 src/*.o
 .pio
 .vscode/.browse.c_cpp.db*
