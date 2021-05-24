@@ -17,7 +17,7 @@
 ltl alarmaActivada{
     [](alarmaState->[]((presencia && !pulsador)-><>alarma))
   //  []((( presencia )->(<>alarma)))
-  
+  []((alarmaState&&presencia)-><>alarma)
 }
 
 ltl alarmaDesactivada{
@@ -26,11 +26,11 @@ ltl alarmaDesactivada{
 }
 
 ltl activaAlarma{
-    []((!alarmaState) ->( pulsador->(<>alarmaState)))
+    []((!alarmaState && pulsador)-><>alarmaState)
 }
 
 ltl desactivaAlarma{
-    []((alarmaState) ->( pulsador->(<>!alarmaState)))
+    []((alarmaState && pulsador)-><>!alarmaState)
 }
 
 /* Inputs */
