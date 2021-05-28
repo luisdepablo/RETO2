@@ -63,12 +63,16 @@ active proctype fsm_simplificado(){
         ::if
             ::(codeState==1) -> atomic{
                 if
-                ::(pulsador && contador<9 && index<=3)->pulsador=0;contador++;codigo[index]=contador; printf("(pulsador) index=%d contador=%d\n",index,contador);
-                ::((!pulsador && esperaCorta && index<2))->codeState=1;esperaCorta=0;contador=0; index++;printf("(!pulsador &&esperaCorta ) index=%d contador=%d\n",index,contador);
-                ::(((!pulsador && esperaLarga))&& (codigo_usado[0]==codigo[0] && codigo_usado[1]==codigo[1] && codigo_usado[2]==codigo[2]))->
-                    codeState=1;esperaLarga=0; index=0;codigo[0]=0;codigo[1]=0;codigo[2]=0;code=1;codigo_ok=1;printf("(code &&esperaLarga ) index=%d contador=%d\n",index,contador);
-                ::(((!pulsador && esperaLarga))&& (!(codigo_usado[0]==codigo[0] && codigo_usado[1]==codigo[1] && codigo_usado[2]==codigo[2]))||(index==3&&contador==9))->
-                    codeState=1;esperaLarga=0; index=0;codigo[0]=0;codigo[1]=0;codigo[2]=0;code=0;codigo_ok=0;printf("(!code &&esperaLarga ) index=%d contador=%d\n",index,contador);
+                ::(pulsador && contador<9)->pulsador=0;contador++;codigo[index]=contador; 
+                    printf("(pulsador) index=%d contador=%d\n",index,contador);
+                ::(!pulsador && esperaCorta && index<2)->codeState=1;esperaCorta=0;contador=0; index++;
+                    printf("(!pulsador &&esperaCorta ) index=%d contador=%d\n",index,contador);
+                ::(!pulsador && esperaLarga && (codigo_usado[0]==codigo[0] && codigo_usado[1]==codigo[1] && codigo_usado[2]==codigo[2]))->
+                    codeState=1;esperaLarga=0; index=0;codigo[0]=0;codigo[1]=0;codigo[2]=0;code=1;codigo_ok=1;
+                    printf("(code &&esperaLarga ) index=%d contador=%d\n",index,contador);
+                ::(!pulsador && esperaLarga&& !(codigo_usado[0]==codigo[0] && codigo_usado[1]==codigo[1] && codigo_usado[2]==codigo[2]))->
+                    codeState=1;esperaLarga=0; index=0;codigo[0]=0;codigo[1]=0;codigo[2]=0;code=0;codigo_ok=0;
+                    printf("(!code &&esperaLarga ) index=%d contador=%d\n",index,contador);
                 fi
             }
             /* ::(codeState==2)-> atomic{
