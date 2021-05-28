@@ -1,7 +1,9 @@
+#include "timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "fsm.h"
 #include "time.h"
+
 
 #include "sdkconfig.h"
 
@@ -15,28 +17,29 @@ void boton_ISR();
 void presencia_ISR();
 
 int count=0;
-int max_count=100;
+int max_count=1000000;
 
-uint32_t alarma_time=0;
-uint32_t luces_time=0;
+int alarma_time=0;
+int luces_time=0;
 
-uint32_t max_alarma_time=0;
-uint32_t max_luces_time=0;
+int max_alarma_time=0;
+int max_luces_time=0;
 
-uint32_t mean_alarma_time=0;
-uint32_t mean_luces_time=0;
+int mean_alarma_time=0;
+int mean_luces_time=0;
 
-uint32_t t1;
-uint32_t t2;
-uint32_t exec_time;
+struct timespec t1;
+struct timespec t2;
+struct timespec exec_time;
 
 void
 app_main(void)
 {
-    printf("Empieza el codigo");
+    printf("Empieza el codigo\n");
     xTaskCreate(tareaAlarmaBasica, "tareaAlarmaBasica", 4096, NULL, 2, NULL);
-    //xTaskCreate(tareaLuces,"tareaLuces",NULL,2,NULL);
-    xTaskCreate(entradas, "entradas", 4096, NULL, 1, NULL);
+    xTaskCreate(entradas, "entradas", 4096, NULL, 1, NULL); 
+
+    //xTaskCreate(tareaLuces,"tareaLuces",4096,NULL,2,NULL);
 
     
 }
@@ -58,12 +61,12 @@ void entradas(void* ignore){
 
     case 1:
         boton_ISR();
-        printf("boton pulsado");
+        //printf("boton pulsado");
         break;
     
     case 2:
         presencia_ISR();
-        printf("presencia");
+        //printf("presencia");
         break;
 
     
@@ -81,22 +84,25 @@ void
 tareaAlarmaBasica(void* ignore){
     fsm_t* alarmaBasica = malloc(sizeof(fsm_t));
     alarmaBasica = fsm_new_alarmaBasica();
+    int t1s,t2s,exec_time_s;
 
     TickType_t xFrequency = pdMS_TO_TICKS(50);
     TickType_t actualTicks = xTaskGetTickCount();
 
     while (count<max_count)
     {
-        
-        t1=(pdTICKS_TO_MS(xTaskGetTickCount()));
+        clock_gettime(CLOCK_REALTIME,&t1);
         fsm_fire(alarmaBasica);
-        t2=(pdTICKS_TO_MS(xTaskGetTickCount()));
-        exec_time=t2-t1;
-        printf("exec_time= %d, t1= %d, t2= %d \n",exec_time,t1,t2);
-        if(exec_time>max_alarma_time){
-            max_alarma_time=exec_time;
+        clock_gettime(CLOCK_REALTIME,&t2);
+        timespec_sub(&exec_time,&t2,&t1);
+        t1s=(&t1)->tv_nsec;
+        t2s=(&t2)->tv_nsec;
+        exec_time_s=(&exec_time)->tv_nsec;
+        printf("exec_time= %d, t1= %d, t2= %d \n",exec_time_s,t1s,t2s);
+        if((&exec_time)->tv_nsec >max_alarma_time){
+            max_alarma_time=(&exec_time)->tv_nsec;
         }
-        alarma_time+=exec_time;
+        alarma_time+=(&exec_time)->tv_nsec;
         //printf("fsm");
         vTaskDelayUntil(&actualTicks,xFrequency);
         printf("cuenta= %d",count);
@@ -110,28 +116,34 @@ tareaAlarmaBasica(void* ignore){
     vTaskDelete(NULL);
 }
 
-void
+ void
     tareaLuces(void* ignore){
         fsm_t* lucesFSM = malloc(sizeof(fsm_t));
         lucesFSM = fsm_new_luces();
+        int t1s,t2s,exec_time_s;
 
         TickType_t xFrequency = pdMS_TO_TICKS(25);
         TickType_t actualTicks = xTaskGetTickCount();
 
         while (count<max_count)
         {
-            t1=(pdTICKS_TO_MS(xTaskGetTickCount()));
+            clock_gettime(CLOCK_REALTIME,&t1);
             fsm_fire(lucesFSM);
-            t2=(pdTICKS_TO_MS(xTaskGetTickCount()));
-            exec_time=t2-t1;
-            if(exec_time>max_luces_time){
-            max_luces_time=exec_time;
+            clock_gettime(CLOCK_REALTIME,&t2);
+            timespec_sub(&exec_time,&t2,&t1);
+            t1s=(&t1)->tv_nsec;
+            t2s=(&t2)->tv_nsec;
+            exec_time_s=(&exec_time)->tv_nsec;
+            printf("exec_time= %d, t1= %d, t2= %d \n",exec_time_s,t1s,t2s);
+            if((&exec_time)->tv_nsec >max_luces_time){
+            max_luces_time=(&exec_time)->tv_nsec;
             }
-            alarma_time+=exec_time;
+            luces_time+=(&exec_time)->tv_nsec;
             vTaskDelayUntil(&actualTicks, xFrequency);
+            count++;
         }
-        mean_alarma_time=alarma_time/max_count;
+        mean_luces_time=luces_time/max_count;
         printf("\r[%d] LUCES  EXEC TIME -> | MEAN: %dns | | MAX: %dns |\n",count,mean_luces_time,max_luces_time);
 
         vTaskDelete(NULL);
-    }
+    } 

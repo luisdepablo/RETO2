@@ -29,7 +29,7 @@ static int check_noBoton(fsm_t* this){
     /* mutex on */
     return !p_this->entradas.botonAlarma;
     /* mutex off */
-    printf("No se ha pulsado boton\n");
+    //printf("No se ha pulsado boton\n");
 
 }
 
@@ -48,7 +48,7 @@ static int check_boton(fsm_t* this){
     /* mutex on */
     return p_this->entradas.botonAlarma;
     /* mutex off */
-    printf("Se ha pulsado el boton\n");
+    //printf("Se ha pulsado el boton\n");
 
 }
 
@@ -70,7 +70,7 @@ static void noAlarma(fsm_t* this){
     p_this->entradas.botonAlarma = 0;
     p_this->entradas.presencia = 0;
     /* Mutex off */
-    printf("La alarma se mantiene apagada\n");
+    //printf("La alarma se mantiene apagada\n");
 }
 
 static void activarAlarma(fsm_t* this){
@@ -82,7 +82,7 @@ static void activarAlarma(fsm_t* this){
     p_this->entradas.botonAlarma = 0;
     p_this->entradas.presencia = 0;
     /* Mutex off */
-    printf("Se activa la alarma\n");
+    //printf("Se activa la alarma\n");
 
 }
 
@@ -94,7 +94,7 @@ static void desactivarAlarma(fsm_t* this){
     /* Mutex on */
     p_this->entradas.botonAlarma = 0;
     /* Mutex off */
-    printf("Se desactiva la alarma\n");
+    //printf("Se desactiva la alarma\n");
 
 }
 
@@ -106,7 +106,7 @@ static void mantieneAlarma(fsm_t* this){
     /* Mutex on */
     p_this->entradas.presencia = 0;
     /* Mutex off */
-     printf("La alarma está activada y sonando\n");
+    //printf("La alarma está activada y sonando\n");
 
 }
 
