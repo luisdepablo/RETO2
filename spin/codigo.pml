@@ -15,11 +15,11 @@
 
 ltl esperaDiezCodigo_ok{
 
-    [](((  esperaLarga && code ) W !pulsador )-> <>codigo_ok)
+    [](( (!pulsador W esperaLarga) && code ) -> <>codigo_ok)
 }
 
 ltl esperaDiezCodigoNo_ok{
-    [](((esperaLarga && !code) W !pulsador) -> <>!codigo_ok)
+    [](( (!pulsador W esperaLarga) && !code)  -> <>!codigo_ok)
 }
 
 /*Inputs*/
@@ -33,6 +33,12 @@ int codigo_ok;
 /*Estados*/
 int codeState;
 //mtype{IDLE,digito1,digito2,digito3,comprabacion}
+byte codigo[3];
+byte codigo_usado[3]={3,3,3}
+byte contador;
+int index;
+
+
 
 
 /*Variables*/
@@ -57,16 +63,19 @@ active proctype fsm_simplificado(){
         ::if
             ::(codeState==1) -> atomic{
                 if
-                ::(pulsador)->pulsador=0; printf("(pulsador)");
-                ::(esperaLarga && code)->codeState=2;codigo_ok=1;printf("(esperaLarga && code)");
-                ::(esperaLarga && !code)->codeState=2;codigo_ok=0;printf("(esperaLarga && !code)");
+                ::(pulsador && contador<9 && index<=3)->pulsador=0;contador++;codigo[index]=contador; printf("(pulsador) index=%d contador=%d\n",index,contador);
+                ::((!pulsador && esperaCorta && index<2))->codeState=1;esperaCorta=0;contador=0; index++;printf("(!pulsador &&esperaCorta ) index=%d contador=%d\n",index,contador);
+                ::(((!pulsador && esperaLarga))&& (codigo_usado[0]==codigo[0] && codigo_usado[1]==codigo[1] && codigo_usado[2]==codigo[2]))->
+                    codeState=1;esperaLarga=0; index=0;codigo[0]=0;codigo[1]=0;codigo[2]=0;code=1;codigo_ok=1;printf("(code &&esperaLarga ) index=%d contador=%d\n",index,contador);
+                ::(((!pulsador && esperaLarga))&& (!(codigo_usado[0]==codigo[0] && codigo_usado[1]==codigo[1] && codigo_usado[2]==codigo[2]))||(index==3&&contador==9))->
+                    codeState=1;esperaLarga=0; index=0;codigo[0]=0;codigo[1]=0;codigo[2]=0;code=0;codigo_ok=0;printf("(!code &&esperaLarga ) index=%d contador=%d\n",index,contador);
                 fi
             }
-            ::(codeState==2)-> atomic{
+            /* ::(codeState==2)-> atomic{
                 if
                 ::(1)->codeState=1; code=0; esperaLarga=0; codigo_ok=0;
                 fi
-            }
+            } */
         fi;
 
     od
@@ -75,9 +84,11 @@ active proctype fsm_simplificado(){
 active proctype entorno_simplificado(){
     do
     ::skip->skip
-    //::pulsador=1
-    ::esperaLarga=1
-    ::code=1
+    ::pulsador=1;
+    ::pulsador=1;
+    ::esperaLarga=1;
+    ::esperaCorta=1;
+    
     od
 }
 
