@@ -72,17 +72,23 @@ static int check_esperaLarga(fsm_t* this){
     int res;
 
     res=((p_this->esperaLarga<=pdTICKS_TO_MS(xTaskGetTickCount()))&&!(p_this->esperaCorta<=pdTICKS_TO_MS(xTaskGetTickCount())));
+    
+    return res;
 }
 
 static void pulsacion(fsm_t* this){
     codigoFSM_t* p_this= this->user_data;
+    static int aux;
 
     p_this->flags.pulsador=0;
 
     p_this->esperaCorta=((pdTICKS_TO_MS(xTaskGetTickCount()))+ESPERA_CORTA);
     p_this->esperaLarga=((pdTICKS_TO_MS(xTaskGetTickCount()))+ESPERA_LARGA);
 
-    (p_this->count+=1)%10;
+    aux=(p_this->count)+1;
+    aux=aux%10;
+
+    (p_this->count)=10;
     p_this->codigo[p_this->index]=p_this->count;
 }
 
@@ -158,5 +164,7 @@ fsm_t* fsm_new_codigo(void){
     };
     codigoFSM.esperaCorta=pdTICKS_TO_MS(xTaskGetTickCount());
     codigoFSM.esperaLarga=pdTICKS_TO_MS(xTaskGetTickCount());
+
+    return fsm_new(STATE,codigo_tt,&codigoFSM);
 
 }

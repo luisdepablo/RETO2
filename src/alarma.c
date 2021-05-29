@@ -3,6 +3,7 @@
 
 
 
+
 /*Estados*/
 enum states{
     ENCENDIDA,
@@ -68,7 +69,7 @@ static void noAlarma(fsm_t* this){
 
     /* Mutex on */
     p_this->entradas.botonAlarma = 0;
-    p_this->entradas.presencia = 0;
+    //p_this->entradas.presencia = 0;
     /* Mutex off */
     printf("La alarma se mantiene apagada\n");
 }
@@ -80,7 +81,7 @@ static void activarAlarma(fsm_t* this){
 
     /* Mutex on */
     p_this->entradas.botonAlarma = 0;
-    p_this->entradas.presencia = 0;
+    //p_this->entradas.presencia = 0;
     /* Mutex off */
     printf("Se activa la alarma\n");
 
@@ -104,7 +105,7 @@ static void mantieneAlarma(fsm_t* this){
     p_this->alarma = 1;
 
     /* Mutex on */
-    p_this->entradas.presencia = 0;
+    //p_this->entradas.presencia = 0;
     /* Mutex off */
      printf("La alarma está activada y sonando\n");
 
@@ -131,4 +132,8 @@ void boton_ISR(){
 
 void presencia_ISR(){
     alarmaFSM.entradas.presencia=1;
+}
+
+void desactiva_presencia_alarma_ISR(){
+    alarmaFSM.entradas.presencia=0;
 }
