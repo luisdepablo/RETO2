@@ -17,7 +17,7 @@ void boton_ISR();
 void presencia_ISR();
 
 int count=0;
-int max_count=1000000;
+int max_count=10;
 
 int alarma_time=0;
 int luces_time=0;
@@ -37,7 +37,7 @@ app_main(void)
 {
     printf("Empieza el codigo\n");
     xTaskCreate(tareaAlarmaBasica, "tareaAlarmaBasica", 4096, NULL, 2, NULL);
-    xTaskCreate(entradas, "entradas", 4096, NULL, 1, NULL); 
+    //xTaskCreate(entradas, "entradas", 4096, NULL, 1, NULL); 
 
     //xTaskCreate(tareaLuces,"tareaLuces",4096,NULL,2,NULL);
 
