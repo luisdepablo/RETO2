@@ -1,5 +1,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include "fsm.h"
 #include "time.h"
 #include <stdio.h>
@@ -9,19 +10,22 @@
 #define STATE 1
 
 static int codigo_usado[3]={3,3,3};
+void codigo_ok_ISR(void* args);
 
 typedef struct{
-    int pulsador;
+    int* pulsador;
 } flags_t;
 
 
 
 typedef struct{
+    SemaphoreHandle_t mutexCodigoOK;
+    SemaphoreHandle_t mutexPulsador; 
     flags_t flags;
     uint32_t esperaCorta;
     uint32_t esperaLarga;
     int codigo[3];
-    int codigo_ok;
+    int* codigo_ok;
     int count;
     int index;
 } codigoFSM_t;
@@ -30,10 +34,11 @@ static codigoFSM_t codigoFSM;
 
 static int check_pulsacion(fsm_t* this){
     codigoFSM_t* p_this= this->user_data;
-    int res;
-
-    res=((p_this->flags.pulsador)&&!(p_this->esperaCorta<=pdTICKS_TO_MS(xTaskGetTickCount()))&&!(p_this->esperaLarga<=pdTICKS_TO_MS(xTaskGetTickCount())));
-
+    int res=0;
+    if(xSemaphoreTake(p_this->mutexPulsador,0)){
+        res=((*p_this->flags.pulsador)&&!(p_this->esperaCorta<=pdTICKS_TO_MS(xTaskGetTickCount()))&&!(p_this->esperaLarga<=pdTICKS_TO_MS(xTaskGetTickCount())));
+        xSemaphoreGive(p_this->mutexPulsador);
+    }
     return res;
 }
 
@@ -79,8 +84,10 @@ static int check_esperaLarga(fsm_t* this){
 static void pulsacion(fsm_t* this){
     codigoFSM_t* p_this= this->user_data;
     static int aux;
-
-    p_this->flags.pulsador=0;
+    if(xSemaphoreTake(p_this->mutexPulsador,0)){
+        p_this->flags.pulsador=0;
+        xSemaphoreGive(p_this->mutexPulsador);
+    }
 
     p_this->esperaCorta=((pdTICKS_TO_MS(xTaskGetTickCount()))+ESPERA_CORTA);
     p_this->esperaLarga=((pdTICKS_TO_MS(xTaskGetTickCount()))+ESPERA_LARGA);
@@ -113,8 +120,12 @@ static void codigo_correcto(fsm_t* this){
     p_this->codigo[0]=0;
     p_this->codigo[1]=0;
     p_this->codigo[2]=0;
-
-    p_this->codigo_ok=1;
+    
+    if(xSemaphoreTake(p_this->mutexCodigoOK,0)){
+        *p_this->codigo_ok=1;
+        xSemaphoreGive(p_this->mutexCodigoOK);
+    }
+    //codigo_ok_ISR((void*) p_this->codigo_ok);
 
     
 }
@@ -152,7 +163,7 @@ static void reinicio(fsm_t* this){
 
 }
 
-fsm_t* fsm_new_codigo(void){
+fsm_t* fsm_new_codigo(SemaphoreHandle_t mutexPulsador,SemaphoreHandle_t mutexCodigoOK,int* pulsador, int* codigo_ok){
 
     static fsm_trans_t codigo_tt[]={
         {STATE,check_pulsacion,STATE,pulsacion},
@@ -164,6 +175,10 @@ fsm_t* fsm_new_codigo(void){
     };
     codigoFSM.esperaCorta=pdTICKS_TO_MS(xTaskGetTickCount());
     codigoFSM.esperaLarga=pdTICKS_TO_MS(xTaskGetTickCount());
+    codigoFSM.flags.pulsador=pulsador;
+    codigoFSM.codigo_ok=codigo_ok;
+    codigoFSM.mutexCodigoOK=mutexCodigoOK;
+    codigoFSM.mutexPulsador=mutexPulsador;
 
     return fsm_new(STATE,codigo_tt,&codigoFSM);
 
